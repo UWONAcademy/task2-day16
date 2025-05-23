@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 2 - Day 16</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom right, #5cb1a6, #6dc1b5);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 860px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .section-title {
+      font-size: 20px;
+      margin-top: 30px;
+      margin-bottom: 12px;
+      color: #34495e;
+      border-bottom: 2px solid #4caf91;
+      padding-bottom: 4px;
+    }
+    .question {
+      margin-bottom: 25px;
+    }
+    .english {
+      font-size: 16px;
+      margin-bottom: 6px;
+      line-height: 1.6;
+    }
+    .translation {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    input[type="text"] {
+      width: 140px;
+      padding: 6px;
+      margin: 0 3px;
+      font-size: 15px;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+    }
+    .check-btn {
+      margin-top: 6px;
+      background: #4caf91;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .feedback {
+      margin-top: 6px;
+      font-weight: bold;
+    }
+    .correct { color: green; }
+    .incorrect { color: red; }
+
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 100px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Task 2 - Day 16</h2>
+    <div class="section-title">一. 句子填空（Environment）</div>
+    <div id="q1" class="question"></div>
+    <div id="q2" class="question"></div>
+    <div id="q3" class="question"></div>
+    <div id="q4" class="question"></div>
+  </div>
+
+  <script>
+    const sentences = [
+      {
+        id: "s1",
+        text: "Governments could introduce laws to limit emissions from factories and impose “green taxes” on drivers and airline companies. Also, they should invest in renewable energy from solar, wind or water power, run campaigns to promote recycling, and protect natural areas and wild animals.",
+        translation: "政府可以立法限制工厂排放，向司机和航空公司征收环保税，投资可再生能源，宣传回收，并保护自然区域和野生动物。",
+        containerId: "q1"
+      },
+      {
+        id: "s2",
+        text: "People could take fewer flights abroad for holidays, and take public transport rather than driving on working days. They should choose products with less packaging and recycle as much as possible.",
+        translation: "人们可以假期少坐飞机、工作日多乘公交、选择包装少的产品并尽可能回收。",
+        containerId: "q2"
+      },
+      {
+        id: "s3",
+        text: "Nuclear power is a sustainable energy source, and it could replace the use of natural resources like coal, oil or gas, which are running out. Because nuclear power stations are cleaner than fossil fuel power stations, they could help to reduce carbon emissions that cause global warming.",
+        translation: "核能是一种可持续能源，可替代煤油天然气等资源。核电更清洁，有助于减少碳排放。",
+        containerId: "q3"
+      },
+      {
+        id: "s4",
+        text: "Opponents of nuclear power worry about the safety of power stations and worry that terrorists could steal radioactive materials. Besides, nuclear waste disposal is a significant problem as there is currently no way to decontaminate radioactive material.",
+        translation: "反对者担心核电站的安全、核材料被盗，以及核废料无法降解的问题。",
+        containerId: "q4"
+      }
+    ];
+
+    function getRandomIndexes(array, min = 5, max = 7) {
+      const count = Math.min(Math.floor(Math.random() * (max - min + 1)) + min, array.length);
+      const set = new Set();
+      while (set.size < count) {
+        const i = Math.floor(Math.random() * array.length);
+        const word = array[i].replace(/[.,()"]/g, '');
+        if (word.length > 2 && !word.includes("'")) set.add(i);
+      }
+      return Array.from(set);
+    }
+
+    function renderSentence({ id, text, translation, containerId }) {
+      const words = text.split(" ");
+      const blanks = getRandomIndexes(words);
+      const answers = {};
+      const html = words.map((word, i) => {
+        const clean = word.replace(/[.,()"]/g, "");
+        const punct = word.match(/[.,()"]$/) ? word.slice(-1) : "";
+        if (blanks.includes(i)) {
+          const inputId = `${id}_${i}`;
+          answers[inputId] = clean.toLowerCase();
+          return `<input type="text" id="${inputId}" placeholder="...">${punct}`;
+        }
+        return word;
+      }).join(" ");
+      document.getElementById(containerId).innerHTML = `
+        <div class="english">${html}</div>
+        <div class="translation">${translation}</div>
+        <button class="check-btn" onclick='checkSentence("${id}", ${JSON.stringify(answers)})'>Check</button>
+        <div class="feedback" id="fb_${id}"></div>
+      `;
+    }
+
+    function checkSentence(id, answers) {
+      const feedback = document.getElementById("fb_" + id);
+      let correct = true;
+      for (const [inputId, expected] of Object.entries(answers)) {
+        const val = document.getElementById(inputId).value.trim().toLowerCase();
+        if (val !== expected) correct = false;
+      }
+      feedback.innerHTML = correct
+        ? "<span class='correct'>✔ 正确！</span>"
+        : "<span class='incorrect'>✘ 有错误</span> 正确答案：" + Object.values(answers).join(" / ");
+    }
+
+    // 初始化填空句子
+    sentences.forEach(renderSentence);
+  </script>
+</body>
+</html>
